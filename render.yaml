@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: mangobox-curation
+    env: node
+    plan: starter
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+        placeholder: "Paste your Supabase connection string here (e.g. postgresql://postgres:password@db.ref.supabase.co:5432/postgres)"
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLOUDINARY_URL
+        sync: false
+        placeholder: "Optional: Paste your Cloudinary URL for media hosting"
+      - key: RESEND_API_KEY
+        sync: false
+        placeholder: "Optional: Paste your Resend API Key for automatic emails"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+        placeholder: "Optional: Google Client ID for OAuth"
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+        placeholder: "Optional: Google Client Secret for OAuth"
+      - key: ADMIN_EMAIL
+        sync: false
+        placeholder: "Optional: Default admin email (defaults to admin@mangobox.curation)"
+      - key: ADMIN_PASSWORD
+        sync: false
+        placeholder: "Optional: Default admin password (defaults to adminpassword123)"

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mangobox-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ai_studio_app_user
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: cloud_sql_development_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    container_name: mangobox-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://ai_studio_app_user:password123@postgres:5432/cloud_sql_development_database
+      - JWT_SECRET=super_secret_jwt_sign_key
+      - CLOUDINARY_URL=YOUR_CLOUDINARY_URL
+      - RESEND_API_KEY=YOUR_RESEND_API_KEY
+      - GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET
+      - ADMIN_EMAIL=YOUR_ADMIN_EMAIL
+      - ADMIN_PASSWORD=YOUR_ADMIN_PASSWORD
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

@@ -1,0 +1,274 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum BookingStatus {
+  SUCCESS
+  PENDING
+  CANCELLED
+}
+
+enum ContactInquiryStatus {
+  PENDING
+  RESOLVED
+  ARCHIVED
+}
+
+enum SubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  password  String // hashed password for Email login
+  role      Role      @default(MEMBER)
+  avatarUrl String?
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  description     String
+  longDescription String
+  iconName        String
+  image           String
+  category        String // 'Nightlife' | 'Corporate' | 'Cultural' | 'Bespoke' | 'Creative'
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ExperienceTemplate {
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  tagline         String
+  description     String
+  vibeDescription String
+  vibeKeywords    String[] // Postgres supports native array types
+  duration        String
+  pricingInfo     String
+  image           String
+  highlights      String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Event {
+  id           String    @id @default(uuid())
+  title        String
+  slug         String    @unique
+  date         String // YYYY-MM-DD
+  time         String
+  venueId      String
+  venue        Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  price        Float
+  ticketsLeft  Int
+  totalTickets Int
+  description  String
+  schedule     Json // Array of { time: string, activity: string }
+  artists      String[] // Array of Artist names or IDs
+  faqs         Json // Array of { question: string, answer: string }
+  image        String
+  gallery      String[]
+  category     String // 'Club' | 'Corporate' | 'Festival' | 'Community' | 'Private' | 'Workshop'
+  featured     Boolean   @default(false)
+  bookings     Booking[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([venueId])
+  @@index([date])
+  @@index([category])
+}
+
+model Artist {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  role        String
+  bio         String
+  image       String
+  gallery     String[]
+  socialLinks Json // { instagram?: string, spotify?: string, soundcloud?: string, youtube?: string }
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([featured])
+}
+
+model Venue {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  address          String
+  capacity         Int
+  amenities        String[]
+  images           String[]
+  description      String
+  pastEventsCount  Int      @default(0)
+  featured         Boolean  @default(false)
+  events           Event[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([featured])
+}
+
+model Booking {
+  id             String        @id @default(uuid())
+  eventId        String
+  event          Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name           String
+  email          String
+  ticketQuantity Int
+  totalPaid      Float
+  status         BookingStatus @default(PENDING)
+  bookingDate    DateTime      @default(now())
+  payments       Payment[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([eventId])
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount        Float
+  provider      String // 'stripe', 'paypal', etc.
+  status        String // 'SUCCESS', 'PENDING', 'FAILED'
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([bookingId])
+}
+
+model Gallery {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  imageUrl    String
+  category    String // 'Concert' | 'Nightlife' | 'Workshop' | 'Corporate' | 'Private'
+  date        String // YYYY-MM-DD
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([date])
+}
+
+model Blog {
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  excerpt         String
+  content         String
+  date            String // YYYY-MM-DD
+  readTime        String
+  authorName      String
+  authorRole      String
+  authorAvatarUrl String
+  image           String
+  category        String // 'Nightlife' | 'Branding' | 'Culture' | 'Curation'
+  featured        Boolean  @default(false)
+  status          String   @default("PUBLISHED") // 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED'
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([featured])
+  @@index([status])
+}
+
+model Faq {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  company   String
+  content   String
+  rating    Int
+  image     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Partner {
+  id         String   @id @default(uuid())
+  name       String
+  type       String // 'Brand' | 'Venue' | 'Sponsor' | 'Artist'
+  logoUrl    String
+  websiteUrl String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ContactInquiry {
+  id        String               @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  company   String?
+  type      String // 'General' | 'Corporate' | 'Venue' | 'Artist' | 'Sponsor' | 'Custom'
+  message   String
+  status    ContactInquiryStatus @default(PENDING)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([status])
+  @@index([email])
+}
+
+model NewsletterSubscriber {
+  id        String           @id @default(uuid())
+  email     String           @unique
+  status    SubscriberStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([status])
+}
+
+model WebsiteSettings {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

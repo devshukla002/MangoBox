@@ -1,0 +1,6 @@
+{
+  "name": "MangoBox",
+  "description": "Unbox Extraordinary. Premium experiences, event curation, artist management, and brand activations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
