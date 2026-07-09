@@ -9,6 +9,9 @@ services:
       - key: DATABASE_URL
         sync: false
         placeholder: "Paste your Supabase connection string here (e.g. postgresql://postgres:password@db.ref.supabase.co:5432/postgres)"
+      - key: ALLOWED_ORIGINS
+        sync: false
+        placeholder: "Optional: Comma-separated list of allowed CORS origins (e.g. http://localhost:3000,https://your-custom-domain.com)"
       - key: NODE_ENV
         value: production
       - key: PORT

@@ -39,7 +39,28 @@ To configure this application to work with a dedicated, cloud-hosted **Supabase 
    JWT_SECRET="super_secret_jwt_sign_key"
    ADMIN_EMAIL="admin@mangobox.curation"
    ADMIN_PASSWORD="adminpassword123"
+   ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000,https://your-custom-domain.com"
    ```
+
+---
+
+## 🌐 CORS Configuration & Render Deployment
+
+To maintain production security while ensuring the application works across all clients, the application supports dynamic CORS configurations via the `ALLOWED_ORIGINS` environment variable.
+
+### Dynamic Allowed Hosts
+By default, the backend dynamically permits:
+- All localhost requests (`localhost` and `127.0.0.1` on any port) for easy local development.
+- All Render-issued subdomains ending in `.onrender.com`.
+- Undefined origin requests (e.g. system health checks and server-to-server requests).
+
+### Custom Domain / Render Configuration
+If you are deploying with a custom domain, configure `ALLOWED_ORIGINS` in your environment variables:
+1. Go to your **Render Dashboard** -> select your **Web Service** -> **Environment**.
+2. Add a new variable:
+   - **Key**: `ALLOWED_ORIGINS`
+   - **Value**: A comma-separated list of allowed URLs (e.g., `https://your-custom-domain.com,https://another-domain.com`).
+3. Save changes. The service will redeploy and authorize the specified domains.
 
 ### 4. Database Initialization Commands
 Open your terminal in the project root directory and run the following three commands in order to prepare and seed your database:

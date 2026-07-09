@@ -22,28 +22,46 @@ const JWT_SECRET = process.env.JWT_SECRET || 'mangobox_fallback_jwt_secret_key';
 // Trust proxy for secure and accurate rate limiting under Render and Cloud Run containers
 app.set('trust proxy', 1);
 
-// Configure CORS policy to allow requests only from verified domains
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  process.env.APP_URL,
-  process.env.SHARED_APP_URL,
-].filter(Boolean) as string[];
-
+// Configure CORS policy dynamically to allow requests matching specific security rules
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl requests, or server-to-server/health checks)
       if (!origin) return callback(null, true);
-      const isAllowed =
-        allowedOrigins.length === 0 ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.run.app') ||
-        origin.endsWith('.render.com');
-      if (isAllowed) {
-        callback(null, true);
-      } else {
-        callback(new Error('Blocked by CORS'));
+
+      // Parse ALLOWED_ORIGINS environment variable
+      const allowedOrigins = process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+        : [];
+
+      // Allow production APP_URL if configured
+      const appUrl = process.env.APP_URL ? process.env.APP_URL.trim() : '';
+
+      // Check for exact matches
+      if (allowedOrigins.includes(origin) || (appUrl && origin === appUrl)) {
+        return callback(null, true);
       }
+
+      // Check for localhost, 127.0.0.1, and Render domains (*.onrender.com)
+      try {
+        const parsedUrl = new URL(origin);
+        const hostname = parsedUrl.hostname;
+
+        // Allow localhost and 127.0.0.1 (any port)
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return callback(null, true);
+        }
+
+        // Allow all Render domains (*.onrender.com)
+        if (hostname === 'onrender.com' || hostname.endsWith('.onrender.com')) {
+          return callback(null, true);
+        }
+      } catch (err) {
+        // Fallback if URL parsing fails
+      }
+
+      // Otherwise, block the request
+      callback(new Error('Blocked by CORS'));
     },
     credentials: true,
   })
